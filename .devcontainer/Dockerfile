@@ -1,8 +1,5 @@
-# Use the [Choice] comment to indicate option arguments that should appear in VS Code UX
-#
-# [Choice] Haskell version: 9, 8
-ARG VARIANT=8
-FROM haskell:${VARIANT}
+FROM ubuntu:focal
+ARG DEBIAN_FRONTEND=noninteractive
 
 # Use the [Option] comment to specify true/false arguments that should appear in VS Code UX
 #
@@ -20,6 +17,42 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && /bin/bash /tmp/library-scripts/common-debian.sh "${INSTALL_ZSH}" "${USERNAME}" "${USER_UID}" "${USER_GID}" "${UPGRADE_PACKAGES}" "true" "true"\
     && apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/* /tmp/library-scripts
 
-# [Optional] Uncomment this section to install additional OS packages.
-# RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
-#     && apt-get -y install --no-install-recommends <your-package-list-here>
+# install dependencies
+RUN \
+    apt-get update -y && \
+    apt-get install -y --no-install-recommends \
+        curl \
+        libnuma-dev \
+        zlib1g-dev \
+        libgmp-dev \
+        libgmp10 \
+        git \
+        wget \
+        lsb-release \
+        software-properties-common \
+        gnupg2 \
+        apt-transport-https \
+        gcc \
+        autoconf \
+        automake \
+        build-essential
+
+# install gpg keys
+ARG GPG_KEY=7784930957807690A66EBDBE3786C5262ECB4A3F
+RUN gpg --batch --keyserver keys.openpgp.org --recv-keys $GPG_KEY
+
+# install ghcup
+RUN \
+    curl https://downloads.haskell.org/~ghcup/x86_64-linux-ghcup > /usr/bin/ghcup && \
+    chmod +x /usr/bin/ghcup && \
+    ghcup config set gpg-setting GPGStrict
+
+ARG GHC=8.10.7
+ARG CABAL=latest
+ARG HLS=latest
+
+# install GHC and cabal
+RUN \
+    ghcup -v install ghc --isolate /usr/local --force ${GHC} && \
+    ghcup -v install cabal --isolate /usr/local/bin --force ${CABAL} && \
+    ghcup -v install hls --isolate /usr/local/bin --force ${HLS}
