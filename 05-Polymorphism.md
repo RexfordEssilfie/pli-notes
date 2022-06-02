@@ -143,16 +143,21 @@ likely behavior of the function in its comment. To do this, describe how the
 function must produce its output in terms of its input.
 
 ~~~haskell
--- TODO: fill me in
+-- This function takes in two arguments of any distinct types,
+-- and then produces a result that is the same as the first type.
+-- The result could be a or some operation on a.
 f1 :: a -> b -> a
 
--- TODO: fill me in
+-- This function takes in a tuple of two elements of type (a, b) and then a second argument of type a, and then produces a result of type b.
+-- The result is likely calling the first argument on the second
 f2 :: (a -> b) -> a -> b
 
--- TODO: fill me in
+-- This function takes in two tuples of type (a, b) and (b, c) and then a third argument of type a, and then produces a result c.
+-- The result is composing the first two arguments on the second.
 f3 :: (a -> b) -> (b -> c) -> a -> c
 
--- TODO: fill me in
+-- This function take in a tuple of type (a,b,c) an argument of type b, and then another of type a, and then returns a result of type c.
+-- The result is calling the first argument on the 3rd and then on the first.
 f4 :: (a -> b -> c) -> b -> a -> c
 ~~~
 
@@ -173,7 +178,7 @@ below as an example:
 
 ~~~haskell
 id8 :: a -> a
-id8 x = undefined   -- TODO: Replace me with _ to see an example of a hole!
+id8 x = x   -- Replace me with _ to see an example of a hole!
                     --       Implement me once you are done so you can
                     --       continue compiling this file!
 ~~~
@@ -223,16 +228,16 @@ how to implement.
 
 ~~~haskell
 -- f1 :: a -> b -> a
-f1 x y = undefined
+f1 x y = x
 
 -- f2 :: (a -> b) -> a -> b
-f2 f x = undefined
+f2 f x = f x
 
 -- f3 :: (a -> b) -> (b -> c) -> a -> c
-f3 f g x = undefined
+f3 f g x = (g . f) x
 
 -- f4 :: (a -> b -> c) -> b -> a -> c
-f4 f x y = undefined
+f4 f x y = (f y) x
 ~~~
 
 **Exercise**: in the above cases, there is a single choice of non-trivial
@@ -252,18 +257,52 @@ on algebraic data types as necessary.  Note that algebraic data type
 constructors do not usually appear in the completion list when using holes.)
 
 ~~~haskell
+-- Evaluates f on x, and then returns g(x) if true, else returns x
 f5 :: (a -> Bool) -> (a -> a) -> a -> a
-f5 f g x = undefined
+f5 f g x = if (f x) then (g x) else x
 
+-- Repeats x, n times
 f6 :: Int -> a -> [a]
-f6 n x = undefined
+f6 n x = [x | i <- [0 .. n]]
 
+-- Returns the result of evaluating the function (f x) on the list, l, and returning the first item. Will throw if the list is empty.
 f7 :: (b -> a -> b) -> b -> [a] -> b
-f7 f x l = undefined
+f7 f x l = y where (y:yx) = map (f x) l
 
+
+addOneIfEven :: Int -> Maybe Int
+addOneIfEven x | even x    = Just (x + 1) 
+               | otherwise = Nothing
+
+-- If (f x) returns a valid value, then return it, otherwise default to d
 f8 :: b -> (a -> Maybe b) -> a -> b
-f8 d f x = undefined
+f8 d f x = case (f x) of
+              Nothing -> d
+              Just a -> a
+-- Test f8
+e8 = f8 100 addOneIfEven 13
 
+
+
+{-
+onlyJust :: [Maybe a] -> [a]
+onlyJust [] = []
+onlyJust (x:xs) = case x of
+                      Just a -> a : onlyJust xs
+                      Nothing -> onlyJust xs
+
+onlyJust2 :: [Maybe a] -> [a]
+onlyJust2 l = [x | Just x <- l]
+-}
+
+-- Applies the function to x, and filters through only the Just items.
 f9 :: (a -> Maybe b) -> [a] -> [b]
-f9 f l = undefined
+f9 f l = [x | Just x <- (map f l)]          
+
+
+maybeEvenLengths :: [Char] -> Maybe Int
+maybeEvenLengths s | even (length s) = Just (length s)
+                   | otherwise       = Nothing
+-- Test f9
+e9 = f9 maybeEvenLengths ["aa", "bbb", "cc"]
 ~~~

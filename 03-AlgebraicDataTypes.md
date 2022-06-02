@@ -88,7 +88,7 @@ world's data can be modeled in such a way, _e.g._,
 +   Sorts of employees in an office.
 +   NPcs in a game
 +   Kinds of abstract syntax in a programming language
-+    Animals in a nature simulation
++   Animals in a nature simulation
 
 With pattern matching, we define behavior by case analysis on these
 structures concisely and directly.
@@ -163,17 +163,35 @@ able to convert a day to a string so the interpreter can print it out.
 -- dayToString d converts a `Day` into an appropriate string representing that
 -- day.
 dayToString :: Day -> String
-dayToString = undefined
+dayToString x = case x of
+                  Monday    -> "Monday"
+                  Tuesday   -> "Tuesday"
+                  Wednesday -> "Wednesday"
+                  Thursday  -> "Thursday"
+                  Friday    -> "Friday"
+                  Saturday  -> "Saturday"
+                  Sunday    -> "Sunday"
 
 -- isWeekend d returns True iff d is a weekend day.
 isWeekend :: Day -> Bool
-isWeekend = undefined
+isWeekend x = case x of 
+                Saturday -> True
+                Sunday   -> True
+                _      -> False
 
 -- nextDay d returns the next day of the week
 nextDay :: Day -> Day
-nextDay = undefined
+nextDay x = case x of 
+              Monday    -> Tuesday
+              Tuesday   -> Wednesday
+              Wednesday -> Thursday
+              Thursday  -> Friday
+              Friday    -> Saturday
+              Saturday  -> Sunday
+              Sunday    -> Monday
 
 -- nextNDays n d returns the day that is n days from the input day.
 nextNDays :: Int -> Day -> Day
-nextNDays = undefined
+nextNDays 0 d = d
+nextNDays x d = nextNDays (x-1) (nextDay d)
 ~~~

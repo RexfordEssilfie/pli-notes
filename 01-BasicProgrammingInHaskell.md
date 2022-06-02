@@ -307,6 +307,8 @@ myAdd :: Integer -> Integer -> Integer
 myAdd x y = x + y
 ~~~
 
+NB: to type the following in `ghci`, you need to type the two statements separated by a `;`
+
 Lists
 -----
 
@@ -401,7 +403,7 @@ implementation. Make sure to test out your code in `ghci` as well!
     and returns a `Float` that is the corresponding temperature in Fahrenheit.
 
 ~~~haskell
-cToF = undefined
+cToF x = x * 9/5 + 32
 ~~~
 
 2.  Write a function `countInRange` that takes a list of `Float`s and two
@@ -420,10 +422,10 @@ nhtemp = [ 49.9, 52.3, 49.4, 51.1, 49.4, 47.9, 49.8, 50.9, 49.3, 51.9, 50.8
          , 50.9, 52.6, 50.2, 52.6, 51.6, 51.9, 50.5, 50.9, 51.7, 51.4, 51.7
          , 50.8, 51.9, 51.8, 51.9, 53 ]
 
-countInRange = undefined
+countInRange items min max = [i | i <- items, min < i, i < max]
 ~~~
 
-3.  Recall that tuples are sequential structures that are heterogeneous but
+1.  Recall that tuples are sequential structures that are heterogeneous but
     fixed-size, for example the `exampleTuple` variable below. Write
     a function, assignIndices that takes a string and creates a *list of pairs
     of integers and characters* where the `i`th character is paired with
@@ -433,18 +435,18 @@ countInRange = undefined
 exampleTuple :: (Int, Bool, [Char])
 exampleTuple = (1, True, "hello")
 
-assignIndices = undefined
+assignIndices str = zip str [0 .. length str]
 ~~~
 
-4.  Use `assignIndices` to write a function `pruneEveryOther` that takes a string
+1.  Use `assignIndices` to write a function `pruneEveryOther` that takes a string
     and produces a new string that removes every other character of the string,
     starting with the second.
 
 ~~~haskell
-pruneEveryOther = undefined
+pruneEveryOther str = [ a  | (a,b) <- assignIndices str, even b]
 ~~~
 
-5.  Write a function `fizzbuzz` that takes an integer `n` and returns a list of
+1.  Write a function `fizzbuzz` that takes an integer `n` and returns a list of
     strings. The ith element of this list should be:
     +    "fizz" if the number is a multiple of 3.
     +    "buzz" if the number is a multiple of 5.
@@ -452,5 +454,7 @@ pruneEveryOther = undefined
     +    The original number if the number is neither a multiple of 3 nor 5.
 
 ~~~haskell
-fizzbuzz = undefined
+fizzbuzz_converter :: Integer -> [Char]
+fizzbuzz_converter x = if mod x 3 == 0 && mod x 5 == 0 then "fizzbuzz" else if mod x 3 == 0 then "fizz" else if mod x 5 == 0 then "buzz" else show x
+fizzbuzz n = map fizzbuzz_converter [0 .. n]
 ~~~

@@ -110,7 +110,13 @@ This language definition has a simple definition as an algebraic data type:
 ~~~haskell
 data Exp
   = ELit Int
+  | EBool Bool
   | EAdd Exp Exp
+  | EMult Exp Exp
+  | EAnd Exp Exp
+  | EOr Exp Exp
+  | ELt Exp Exp
+  | ECond Exp Exp Exp
   deriving (Eq, Show)
 ~~~
 
@@ -129,8 +135,17 @@ e1 = ELit 42
 e2 = EAdd (ELit 1) (ELit 1)
 -- 1 + (2 + 3)
 e3 = EAdd (ELit 1) (EAdd (ELit 2) (ELit 3))
--- (1 + 2) * 3
+-- (1 + 2) + 3
 e4 = EAdd (EAdd (ELit 1) (ELit 2)) (ELit 3)
+-- (1 * 2) * 3
+e5 = EMult (EMult (ELit 1) (ELit 2)) (ELit 3)
+
+-- ((True and False) || True)
+e6 = EOr (EAnd (EBool True) (EBool False)) (EBool True)
+
+
+-- (if True then 3 else 5)
+e7 = ECond (ELit 4) (ELit 3) (ELit 5)
 ~~~
 
 Note that precedence is encoded in our AST via its branching structure.  For
@@ -166,8 +181,21 @@ string.
 ~~~haskell
 prettyPrintExp :: Exp -> String
 prettyPrintExp (ELit n) = show n
+prettyPrintExp (EBool n) = show n
+
 prettyPrintExp (EAdd e1 e2) =
   "(" ++ prettyPrintExp e1 ++ " + " ++ prettyPrintExp e2 ++ ")"
+prettyPrintExp (EMult e1 e2) =
+  "(" ++ prettyPrintExp e1 ++ " * " ++ prettyPrintExp e2 ++ ")"
+
+prettyPrintExp (EAnd e1 e2) =
+  "(" ++ prettyPrintExp e1 ++ " && " ++ prettyPrintExp e2 ++ ")"
+prettyPrintExp (EOr e1 e2) =
+  "(" ++ prettyPrintExp e1 ++ " || " ++ prettyPrintExp e2 ++ ")"
+
+prettyPrintExp (ECond e1 e2 e3) = 
+  "(if " ++ prettyPrintExp e1 ++ " then " ++ prettyPrintExp e2 ++ " else " ++ prettyPrintExp e3 ++ ")"
+
 ~~~
 
 And here are the results of translating the four simple programs we created
@@ -178,6 +206,9 @@ s1 = prettyPrintExp e1    -- "42"
 s2 = prettyPrintExp e2    -- "(1 + 1)"
 s3 = prettyPrintExp e3    -- "(1 + (2 + 3))"
 s4 = prettyPrintExp e4    -- "((1 + 2) + 3)"
+s5 = prettyPrintExp e5    -- "((1 * 2) * 3)"
+s6 = prettyPrintExp e6    -- "((True and False) || True)"
+s7 = prettyPrintExp e7    -- "(if 2 < 6 then 3 else 5)"
 ~~~
 
 Interpretation
@@ -195,9 +226,26 @@ Like pretty printing, interpretation is a straightforward recursive function
 over the structure of the ADT:
 
 ~~~haskell
+convertIntToBool :: Int -> Bool
+convertIntToBool 0 = False
+convertIntToBool _ = True
+
+convertBoolToInt :: Bool -> Int
+convertBoolToInt True = 1
+convertBoolToInt False = 0
+
+
 interpret :: Exp -> Int
 interpret (ELit n) = n
+interpret (EBool n) = convertBoolToInt n
+
+interpret (EAnd e1 e2) = convertBoolToInt (((convertIntToBool . interpret) e1) && ((convertIntToBool . interpret) e2))
+interpret (EOr e1 e2) = convertBoolToInt (((convertIntToBool . interpret) e1) || ((convertIntToBool . interpret) e2))
+
 interpret (EAdd e1 e2) = interpret e1 + interpret e2
+interpret (EMult e1 e2) = interpret e1 * interpret e2
+
+interpret (ELt e1 e2) = convertBoolToInt (interpret e1 < interpret e2)
 ~~~
 
 Along with examples of running our interpreter over our sample programs:
@@ -228,7 +276,7 @@ b.  Extend `Exp` with booleans, a comparison operator, and conditionals.
 More specifically, for (b), extend the language with the following constructs:
 
 ~~~
-e ::= ... | true | false | e1 < e2 | if e1 else e2 else e3
+e ::= ... | true | false | e1 < e2 | if e1 then e2 else e3
 ~~~
 
 And extend `prettyPrintExp` and `interpret` with these additional
