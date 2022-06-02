@@ -5,7 +5,7 @@ module Interpretation where
 --------------------------------------------------------------------------------
 
 -- Previously, we introduced the abstract syntax tree, a tree-like
--- representation of a comptuer program amendable to analysis and
+-- representation of a computer program amendable to analysis and
 -- transformation. ASTs are the core data structure manipulated by program
 -- analysis tools such as compilers.
 --
@@ -32,9 +32,16 @@ data Exp
   = ELit Int        -- n
   | ETrue           -- true
   | EFalse          -- false
+  | ENot Exp        -- ~e1
+  | EAnd Exp Exp    -- e1 && e2
+  | EOr Exp Exp     -- e1 || e2
   | EPlus Exp Exp   -- e1 + e2
+  | EMult Exp Exp   -- e1 * e2
   | ELt Exp Exp     -- e1 < e2
   | EIf Exp Exp Exp -- if e1 then e2 else e3
+  | EPair Exp Exp   -- (e1, e2)
+  | EFst Exp        -- First of (e1, e2) -> e1
+  | ESnd Exp        -- Second of (e1, e2) -> e2
   deriving (Show, Eq)
 
 -- As well as a pretty-printing function for it:
@@ -42,16 +49,29 @@ data Exp
 parens :: String -> String
 parens s = "(" ++ s ++ ")"
 
-prettyPrintExp :: Exp -> String 
+prettyPrintExp :: Exp -> String
 prettyPrintExp (ELit n) = show n
 prettyPrintExp ETrue = "true"
 prettyPrintExp EFalse = "false"
+prettyPrintExp (ENot e1) = parens . unwords $ ["not", prettyPrintExp e1]
 prettyPrintExp (EPlus e1 e2) =
   parens . unwords $ [prettyPrintExp e1, "+", prettyPrintExp e2]
+prettyPrintExp (EMult e1 e2) =
+  parens . unwords $ [prettyPrintExp e1, "*", prettyPrintExp e2]
 prettyPrintExp (ELt e1 e2) =
-  parens . unwords $ [prettyPrintExp e1, "+", prettyPrintExp e2]
+  parens . unwords $ [prettyPrintExp e1, "<", prettyPrintExp e2]
+prettyPrintExp (EAnd e1 e2) =
+  parens . unwords $ [prettyPrintExp e1, "&&", prettyPrintExp e2]
+prettyPrintExp (EOr e1 e2) =
+  parens . unwords $ [prettyPrintExp e1, "||", prettyPrintExp e2]
 prettyPrintExp (EIf e1 e2 e3) =
   parens . unwords $ ["if", prettyPrintExp e1, "then", prettyPrintExp e2, "else", prettyPrintExp e3]
+prettyPrintExp (EPair e1 e2) =
+  parens . unwords $ [prettyPrintExp e1, ",", prettyPrintExp e2]
+prettyPrintExp (EFst e1) =
+  parens . unwords $ ["fst", prettyPrintExp e1]
+prettyPrintExp (ESnd e1) =
+  parens . unwords $ ["snd", prettyPrintExp e1]
 
 -- What about evaluation? Recall the type signature of our evaluation function.
 --
@@ -68,9 +88,12 @@ prettyPrintExp (EIf e1 e2 e3) =
 -- datatype:
 
 data Val
-  = VInt Int  -- n
-  | VTrue     -- true
-  | VFalse    -- false
+  = VInt Int        -- n
+  | VString [Char]  -- s
+  | VTrue           -- true
+  | VFalse          -- false
+  | VPair Val Val   -- (x, y)
+  deriving (Show, Eq)
 
 -- And now our evaluate function can produce this as output. Let's try pushing
 -- the implementation through:
@@ -151,13 +174,25 @@ evaluate'' _ =
 -- With the `Maybe` datatype, we can refine our evaluate function again to
 -- now account for the possibility of error in our evaluation.
 
+vBool :: Val -> Val
+vBool VFalse = VFalse
+vBool VTrue = VTrue
+vBool (VInt n) = if n == 0 then VFalse else VTrue
+vBool (VString s) = if null s then VFalse else VTrue
+vBool (VPair x y) = VTrue
+
+
 evaluate :: Exp -> Maybe Val
 evaluate (ELit n) = Just (VInt n)
 evaluate ETrue = Just VTrue
-evaluate EFalse = Just VTrue
+evaluate EFalse = Just VFalse
 evaluate (EPlus e1 e2) =
   case (evaluate e1, evaluate e2) of
     (Just (VInt n1), Just (VInt n2)) -> Just $ VInt $ n1 + n2
+    _                                -> Nothing
+evaluate (EMult e1 e2) =
+  case (evaluate e1, evaluate e2) of
+    (Just (VInt n1), Just (VInt n2)) -> Just $ VInt $ n1 * n2
     _                                -> Nothing
 evaluate (ELt e1 e2) =
   case (evaluate e1, evaluate e2) of
@@ -168,7 +203,38 @@ evaluate (EIf e1 e2 e3) =
     Just VTrue -> evaluate e2
     Just VFalse -> evaluate e3
     _ -> Nothing
-
+evaluate (ENot e1) =
+  case evaluate e1 of
+    Just VTrue -> Just VFalse
+    Just VFalse -> Just VTrue
+    Just v      -> Just $ vBool v
+    _ -> Nothing
+evaluate (EAnd e1 e2) =
+  case (evaluate e1, evaluate e2) of
+    (Just v1, Just v2) ->
+      case (vBool v1, vBool v2) of
+        (VTrue, VTrue) -> Just VTrue
+        _              -> Just VFalse
+    _ -> Nothing
+evaluate (EOr e1 e2) =
+  case (evaluate e1, evaluate e2) of
+    (Just v1, Just v2) ->
+      case (vBool v1, vBool v2) of
+        (VFalse, VFalse) -> Just VFalse
+        _                -> Just VTrue
+    _ -> Nothing
+evaluate (EPair e1 e2) =
+  case (evaluate e1, evaluate e2) of
+    (Just v1, Just v2) -> Just (VPair v1 v2)
+    _ -> Nothing
+evaluate (EFst e1) =
+  case evaluate e1 of
+    Just (VPair v1 v2) -> Just v1
+    _ -> Nothing
+evaluate (ESnd e1) =
+  case evaluate e1 of
+    Just (VPair v1 v2) -> Just v2
+    _ -> Nothing
 -- Now our function is complete! Note that the Maybe datatype introduces a
 -- second box to our results that we must wrap and unwrap throughout the
 -- function. For example, in the ELit case, we must wrap the result integer
@@ -191,3 +257,5 @@ evaluate (EIf e1 e2 e3) =
 -- input and returning the first and second components of the pair,
 -- respectively.
 --------------------------------------------------------------------------------
+
+e1 = EMult (EFst (EPair (ELit 1) (ELit 2))) (ELit (-4))
