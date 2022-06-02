@@ -117,27 +117,38 @@ ack m n | m == 0          = n + 1
 -- 1. Write a function `myAll` that takes list of booleans as input and returns
 --    true iff the list only contains `True` values.
 
-all = undefined
-
+myAll :: [Bool] -> Bool
+myAll [] = True
+myAll (x:xs) = x && myAll xs
 -- 2. Write a function `append` that takes two lists (of the same type) as input
 --    and returns a new list that is the result of appending the second list onto
 --    the end of the first.
 
-append = undefined
+append :: [a] -> [a] -> [a]
+append a [] = a
+append [] b = b
+append (a:as) b = a : append as b 
 
 -- 3. Write a function `contains` that takes an element and a list and returns
 --    `True` iff the element is in the list. (Hint: what type class constraint
 --    do you need on the elements of the list to ensure you can compare them for
 --    equality?).
 
-contains = undefined
+contains :: (Eq m) => m -> [m] -> Bool
+contains a [] = False
+contains a (m:ms) | m == a    = True
+                  | otherwise = contains a ms
 
 -- 4. Write a function `snoc` that takes an element and a list and appends that
 --    element onto the end of the list.
 
-snoc = undefined
+snoc :: a -> [a] -> [a]
+snoc a [] = [a]
+snoc a (x:xs) = x : snoc a xs
 
 -- 5. Write a function `rev` that takes a list and returns a reversed version of
 --    that list. (Hint: can you use a previous function to do this?)
 
-rev = undefined
+rev :: [a] -> [a]
+rev [] = []
+rev (x:xs) = snoc x (rev xs)

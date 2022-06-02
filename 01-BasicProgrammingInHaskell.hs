@@ -337,7 +337,7 @@ oddLengthNames = [n | n <- names, odd (length n)]
 -- 1. Write a function `cToF` that takes an `Float` that is an amount in Celsius
 --    and returns a `Float` that is the corresponding temperature in Fahrenheit.
 
-cToF = undefined
+cToF x = x * 9/5 + 32
 
 -- 2. Write a function `countInRange` that takes a list of `Float`s and two
 --    additional `Float`s—a `min` and `max` value—and returns the number of
@@ -354,7 +354,7 @@ nhtemp = [ 49.9, 52.3, 49.4, 51.1, 49.4, 47.9, 49.8, 50.9, 49.3, 51.9, 50.8
          , 50.9, 52.6, 50.2, 52.6, 51.6, 51.9, 50.5, 50.9, 51.7, 51.4, 51.7
          , 50.8, 51.9, 51.8, 51.9, 53 ]
 
-countInRange = undefined
+countInRange items min max = [i | i <- items, min < i, i < max]
 
 -- 3. Recall that tuples are sequential structures that are heterogeneous but
 --    fixed-size, for example the `exampleTuple` variable below. Write
@@ -365,13 +365,13 @@ countInRange = undefined
 exampleTuple :: (Int, Bool, [Char])
 exampleTuple = (1, True, "hello")
 
-assignIndices = undefined
+assignIndices str = zip str [0 .. length str]
 
 -- 4. Use `assignIndices` to write a function `pruneEveryOther` that takes a string
 --    and produces a new string that removes every other character of the string,
 --    starting with the second.
 
-pruneEveryOther = undefined
+pruneEveryOther str = [ a  | (a,b) <- assignIndices str, even b]
 
 -- 5. Write a function `fizzbuzz` that takes an integer `n` and returns a list of
 --    strings. The ith element of this list should be:
@@ -380,4 +380,10 @@ pruneEveryOther = undefined
 --    + "fizzbuzz" if the number is a multiple of both 3 and 5.
 --    + The original number if the number is neither a multiple of 3 nor 5.
 
-fizzbuzz = undefined
+fizzbuzzConverter :: Integer -> [Char]
+fizzbuzzConverter x
+  | mod x 3 == 0 && mod x 5 == 0 = "fizzbuzz"
+  | mod x 3 == 0 = "fizz"
+  | mod x 5 == 0 = "buzz"
+  | otherwise = show x
+fizzbuzz n = map fizzbuzzConverter [0 .. n]

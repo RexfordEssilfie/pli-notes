@@ -131,16 +131,20 @@ bottom = bottom
 -- function must produce its output in terms of its input.
 --------------------------------------------------------------------------------
 
--- TODO: fill me in
+-- This function takes in two elements and returns the first.
 f1 :: a -> b -> a
 
--- TODO: fill me in
+-- This function takes in a function, and an element,
+-- and then applies the function to the element, returning the result.
 f2 :: (a -> b) -> a -> b
 
--- TODO: fill me in
+-- This function takes in a tuple of two elements of type (a, b) and then a second argument of type a, and then produces a result of type b.
+-- The result is likely calling the first argument on the second
 f3 :: (a -> b) -> (b -> c) -> a -> c
 
--- TODO: fill me in
+-- This function takes in a function that returns a function, and then two elements.
+-- It applies the first function argument to the last argument (of type a), and then applies
+-- the resulting function on the second argument and returns the result.
 f4 :: (a -> b -> c) -> b -> a -> c
 
 -- In type-directed programming, the structure of our types dictates the design
@@ -207,16 +211,16 @@ id8 x = undefined   -- TODO: Replace me with _ to see an example of a hole!
 --------------------------------------------------------------------------------
 
 -- f1 :: a -> b -> a
-f1 x y = undefined
+f1 x y = x
 
 -- f2 :: (a -> b) -> a -> b
-f2 f x = undefined
+f2 f x = f x
 
 -- f3 :: (a -> b) -> (b -> c) -> a -> c
-f3 f g x = undefined
+f3 f g x = (g . f) x
 
 -- f4 :: (a -> b -> c) -> b -> a -> c
-f4 f x y = undefined
+f4 f x y = (f y) x
 
 --------------------------------------------------------------------------------
 -- Exercise: in the above cases, there is a single choice of non-trivial
@@ -236,17 +240,52 @@ f4 f x y = undefined
 -- constructors do not usually appear in the completion list when using holes.)
 --------------------------------------------------------------------------------
 
+-- Evaluates f on x, and then returns g(x) if true, else returns x
 f5 :: (a -> Bool) -> (a -> a) -> a -> a
-f5 f g x = undefined
+f5 f g x = if (f x) then (g x) else x
 
+-- Repeats x, n times
 f6 :: Int -> a -> [a]
-f6 n x = undefined
+f6 n x = [x | i <- [0 .. n]]
 
+-- Returns the result of evaluating the function (f x) on the list, l, and returning the first item. Will throw if the list is empty.
 f7 :: (b -> a -> b) -> b -> [a] -> b
-f7 f x l = undefined
+f7 f x l = y where (y:yx) = map (f x) l
 
+
+
+
+-- If (f x) returns a valid value, then return it, otherwise default to d
 f8 :: b -> (a -> Maybe b) -> a -> b
-f8 d f x = undefined
+f8 d f x = case f x of
+              Nothing -> d
+              Just a -> a
 
+-- Test f8
+addOneIfEven :: Int -> Maybe Int
+addOneIfEven x | even x    = Just (x + 1)
+               | otherwise = Nothing
+e8 = f8 100 addOneIfEven 13
+
+{-
+onlyJust :: [Maybe a] -> [a]
+onlyJust [] = []
+onlyJust (x:xs) = case x of
+                      Just a -> a : onlyJust xs
+                      Nothing -> onlyJust xs
+
+onlyJust2 :: [Maybe a] -> [a]
+onlyJust2 l = [x | Just x <- l]
+-}
+
+-- Applies the function to x, and filters through only the Just items.
 f9 :: (a -> Maybe b) -> [a] -> [b]
-f9 f l = undefined
+f9 f l = [x | Just x <- map f l]
+
+
+-- Test f9
+maybeEvenLengths :: [Char] -> Maybe Int
+maybeEvenLengths s | even (length s) = Just (length s)
+                   | otherwise       = Nothing
+
+e9 = f9 maybeEvenLengths ["aa", "bbb", "cc"]

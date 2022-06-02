@@ -142,16 +142,34 @@ data Day
 -- dayToString d converts a `Day` into an appropriate string representing that
 -- day.
 dayToString :: Day -> String
-dayToString = undefined
+dayToString x = case x of
+                  Monday    -> "Monday"
+                  Tuesday   -> "Tuesday"
+                  Wednesday -> "Wednesday"
+                  Thursday  -> "Thursday"
+                  Friday    -> "Friday"
+                  Saturday  -> "Saturday"
+                  Sunday    -> "Sunday"
 
 -- isWeekend d returns True iff d is a weekend day.
 isWeekend :: Day -> Bool
-isWeekend = undefined
+isWeekend x = case x of 
+                Saturday -> True
+                Sunday   -> True
+                _      -> False
 
 -- nextDay d returns the next day of the week
 nextDay :: Day -> Day
-nextDay = undefined
+nextDay x = case x of 
+              Monday    -> Tuesday
+              Tuesday   -> Wednesday
+              Wednesday -> Thursday
+              Thursday  -> Friday
+              Friday    -> Saturday
+              Saturday  -> Sunday
+              Sunday    -> Monday
 
 -- nextNDays n d returns the day that is n days from the input day.
 nextNDays :: Int -> Day -> Day
-nextNDays = undefined
+nextNDays 0 d = d
+nextNDays x d = nextNDays (x-1) (nextDay d)
