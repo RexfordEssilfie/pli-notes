@@ -293,9 +293,9 @@ typecheck (EIf e1 e2 e3) =
     _ -> Nothing
 typecheck (EPair e1 e2) =
   case (typecheck e1, typecheck e2) of
-    (Just t2, Just t3) ->
-      if t2 == t3 then
-        Just t2
+    (Just t1, Just t2) ->
+      if t1 == t2 then
+        Just t1
       else
         Nothing
     _ -> Nothing
