@@ -23,12 +23,14 @@ data Exp
   | EPlus Exp Exp
   | ELt Exp Exp
   | EIf Exp Exp Exp
+  | EPair Exp Exp
   deriving Show
 
 data Val
   = VInt Int
   | VTrue
   | VFalse
+  | VPair Val Val
   deriving Show
 
 data Typ
@@ -141,7 +143,7 @@ badResult = evaluate bad  -- Nothing
 -- The major downside of static typechecking is its complexity for both
 -- programmers and compiler implementors. More complex type systems demand more
 -- from both parties in terms of code written and mental effort to understand
--- how the typechecker works. In the limit, the type sytstem becomes more
+-- how the typechecker works. In the limit, the type system becomes more
 -- complicated to work with than the underlying language semantics itself!
 -- Despite these downsides, static typechecking is still an increasingly
 -- common choice in language design. For example, many dynamic languages like
@@ -263,7 +265,7 @@ badResult = evaluate bad  -- Nothing
 -- code. Our typechecker is a function that, given an expression, produces
 -- the type of that expression or an error if the expression does not
 -- typecheck. Our rules are specified in terms of the structure of the
--- expression, so we proceed by patetrn matching on the expression in
+-- expression, so we proceed by pattern matching on the expression in
 -- question. When premises are present, they become recursive calls to
 -- the typechecker, and in the case of our conditional, we do an explicit
 -- equality check to ensure the branches of the conditional produce the
@@ -289,6 +291,15 @@ typecheck (EIf e1 e2 e3) =
       else
         Nothing
     _ -> Nothing
+typecheck (EPair e1 e2) =
+  case (typecheck e1, typecheck e2) of
+    (Just t2, Just t3) ->
+      if t2 == t3 then
+        Just t2
+      else
+        Nothing
+    _ -> Nothing
+
 
 -- With the typechcking function specified, we can now write a version of
 -- evaluate, evaluateP, that is partial. That is, it fails implicitly in the
@@ -314,6 +325,7 @@ evaluateP (EIf e1 e2 e3) =
   case evaluateP e1 of
     VTrue -> evaluateP e2
     VFalse -> evaluateP e3
+evaluateP (EPair e1 e2) = VPair (evaluateP e1) (evaluateP e2)
 
 -- To use evaluateP, we can use our typechecker to ensure that the program
 -- is well-typed before running it. Thus, if the program typechecks, we know
